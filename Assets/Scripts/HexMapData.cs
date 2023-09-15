@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
@@ -17,15 +17,9 @@ namespace DefaultNamespace
     [Serializable]
     public class HexMapChild
     {
-        public enum MapTypeFlag
-        {
-            type1,
-            type2,
-            type3,
-        }
+        public int MapType = 1;
         public int X;
         public int Z;
-        public MapTypeFlag MapType = MapTypeFlag.type1;
         
         public Quaternion rot;
         public string name;
