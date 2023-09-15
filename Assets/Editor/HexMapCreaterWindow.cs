@@ -1,3 +1,4 @@
+using System;
 using DefaultNamespace;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -96,9 +97,8 @@ public class HexMapCreaterWindow : OdinEditorWindow
         for (int i = 0; i < hexMapData.hexChildList.Count; i++)
         {
             var data = hexMapData.hexChildList[i];
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_CONFIG_PATH}{(int)data.MapType + 1}.prefab");
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_CONFIG_PATH}{data.MapType}.prefab");
             var tmpTrans = Instantiate(prefab, parent.transform).transform;
-			tmpTrans.rotation = Quaternion.Euler(0, 30, 0);
             var childPos = maxGridHexXZ.GetWorldPosition(data.X, data.Z);
             tmpTrans.position = childPos;
             tmpTrans.rotation = data.rot;
@@ -125,8 +125,6 @@ public class HexMapCreaterWindow : OdinEditorWindow
     [AssetSelector(SearchInFolders = new string[]{"Assets/_Resources/Map/"}), LabelText("预制体"), LabelWidth(50), PreviewField(Height = 100), ShowIf("@hexMapData != null"), OnValueChanged("HexPrefabChanged")]
     public GameObject prefab;
 
-    private HexMapChild.MapTypeFlag curMapType;
-    
     [LabelText("当前选中的物体"), LabelWidth(80), ShowIf("@parent != null")]
     public GameObject curSelHex;
     
@@ -138,6 +136,9 @@ public class HexMapCreaterWindow : OdinEditorWindow
     {
         curSelHex.transform.Rotate(new Vector3(0, 1, 0), 60);
     }
+
+    private int clickX;
+    private int clickZ;
 
     #endregion
 
@@ -152,6 +153,10 @@ public class HexMapCreaterWindow : OdinEditorWindow
             if (hexMapData.hexChildList[i].Transform == null)
             {
                 hexMapData.hexChildList.RemoveAt(i);
+            }
+            else
+            {
+                hexMapData.hexChildList[i].rot = hexMapData.hexChildList[i].Transform.rotation;
             }
         }
         
@@ -175,7 +180,7 @@ public class HexMapCreaterWindow : OdinEditorWindow
         base.OnGUI();
         if (Selection.gameObjects.Length > 0)
         {
-            if (Selection.gameObjects[0].name.Contains("map_type"))
+            if (Selection.gameObjects[0].name.Contains("floor_0_lod0"))
             {
                 curSelHex = Selection.gameObjects[0];
             }
@@ -238,37 +243,34 @@ public class HexMapCreaterWindow : OdinEditorWindow
                 prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_CONFIG_PATH}{1.ToString()}.prefab");
             }
 
-            curMapType = HexMapChild.MapTypeFlag.type1;
-            switch (prefab.name)
-            {
-                case "map_type1":
-                    curMapType = HexMapChild.MapTypeFlag.type1;
-                    break;
-                case "map_type2":
-                    curMapType = HexMapChild.MapTypeFlag.type2;
-                    break;
-                case "map_type3":
-                    curMapType = HexMapChild.MapTypeFlag.type3;
-                    break;
-            }
-
             if (!alreadySet)
             {
                 var tmpTrans = Instantiate(prefab, parent.transform).transform;
+                tmpTrans.rotation = Quaternion.Euler(0, 30, 0);
                 child = new HexMapChild(x, z, tmpTrans.rotation);
                 child.Transform = tmpTrans;
+                child.MapType = int.Parse(prefab.name.Replace("floor_0_lod0 ", String.Empty));
                 hexMapData.hexChildList.Add(child);
             }
             else
             {
-                if (child.Transform != null)
+                if (clickX == x && clickZ == z)
                 {
-                    GameObject.DestroyImmediate(child.Transform.gameObject);
+                    if (child.Transform != null)
+                    {
+                        GameObject.DestroyImmediate(child.Transform.gameObject);
+                    }
+                
+                    child.Transform = Instantiate(prefab, parent.transform).transform;
+                    child.MapType = int.Parse(prefab.name.Replace("floor_0_lod0 ", String.Empty));
+                    child.Transform.rotation = Quaternion.Euler(0, 30, 0);
                 }
-                child.Transform = Instantiate(prefab, parent.transform).transform;
+                else
+                {
+                    clickX = x;
+                    clickZ = z;
+                }
             }
-
-            child.MapType = curMapType;
             child.Transform.position = childPos;
         }
     }
