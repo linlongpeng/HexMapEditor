@@ -17,7 +17,7 @@ public class HexMapCreaterWindow : OdinEditorWindow
     }
     
     private static string MAPDATA_CONFIG_PATH = "Assets/_Resources/MapData/";
-    private static string PREFAB_CONFIG_PATH = "Assets/_Resources/Map/map_type";
+    private static string PREFAB_CONFIG_PATH = "Assets/_Resources/Map/floor_0_lod0 ";
 
     #region 创建地图文件
     
@@ -70,7 +70,7 @@ public class HexMapCreaterWindow : OdinEditorWindow
         if(hexMapData.maxHeight == 0)
             hexMapData.maxWidth = maxWidth;
         
-        maxGridHexXZ = new GridHexXZ<GridObject>(hexMapData.maxHeight, hexMapData.maxHeight, 0.83f, Vector3.zero, (gridObj, x, z) =>
+        maxGridHexXZ = new GridHexXZ<GridObject>(hexMapData.maxHeight, hexMapData.maxHeight, 16.6f, Vector3.zero, (gridObj, x, z) =>
         {
             var mapObj = new GridObject();
             return mapObj;
@@ -82,6 +82,7 @@ public class HexMapCreaterWindow : OdinEditorWindow
             for (int z = 0; z < hexMapData.maxHeight; z++)
             {
                 Transform trans = Instantiate(basePrefab, baseParent).transform;
+				trans.name = $"x:{x} z:{z}";
                 trans.position = maxGridHexXZ.GetWorldPosition(x, z);
                 maxGridHexXZ.GetGridObject(x, z).VisualTransform = trans;
             }
@@ -97,6 +98,7 @@ public class HexMapCreaterWindow : OdinEditorWindow
             var data = hexMapData.hexChildList[i];
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PREFAB_CONFIG_PATH}{(int)data.MapType + 1}.prefab");
             var tmpTrans = Instantiate(prefab, parent.transform).transform;
+			tmpTrans.rotation = Quaternion.Euler(0, 30, 0);
             var childPos = maxGridHexXZ.GetWorldPosition(data.X, data.Z);
             tmpTrans.position = childPos;
             tmpTrans.rotation = data.rot;
